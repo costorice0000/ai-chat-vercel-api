@@ -1,0 +1,8 @@
+{
+  "name": "castorice-ai-chat-app",
+  "version": "1.0.0",
+  "description": "Vercel API for Gemini Chat",
+  "dependencies": {
+    "@google/genai": "^0.1.0"
+  }
+}

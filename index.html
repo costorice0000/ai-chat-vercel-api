@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>castorice - 實用連結與工具</title> 
+    <style>
+        /* CSS 變數定義 */
+        :root {
+            --primary-purple: #6A0DAD; 
+            --light-purple: #F3E5FF;    
+            --text-color: #4A0055;     
+            --container-bg: rgba(255, 255, 255, 0.85); 
+            --tool-bg: rgba(255, 255, 255, 0.95); 
+            --tool-header-bg: #8A2BE2; 
+            --link-hover: #9370DB;     
+            --calc-btn-bg: #DDD0F0; 
+            --chat-bg-user: #EFE6FF; 
+            --chat-bg-ai: #F5F5F5;   
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: var(--light-purple);
+        }
+
+        .container {
+            background-color: var(--container-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(106, 13, 173, 0.2);
+            max-width: 650px;
+            margin: 0 auto;
+            backdrop-filter: blur(5px);
+            position: relative; 
+        }
+
+        h1 {
+            color: var(--primary-purple);
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            color: var(--text-color);
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0), var(--primary-purple), rgba(0, 0, 0, 0));
+            margin: 30px 0;
+        }
+
+        /* 頭像樣式 */
+        .profile-image {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 20px auto; 
+            display: block; 
+            border: 4px solid var(--primary-purple);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 連結按鈕區塊 */
+        .link-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        /* 工具按鈕區塊 (左上角) */
+        .tool-section {
+            display: flex;
+            justify-content: flex-start; 
+            gap: 10px; 
+            width: 100%; 
+            padding: 0 30px; 
+            margin-bottom: 30px;
+            margin-top: 5px; 
+        }
+        
+        .tool-button {
+            width: auto; 
+            min-width: 120px; 
+            padding: 8px 15px; 
+            font-size: 1em; 
+            flex-grow: 0; 
+        }
+
+        .link-button, .tool-button {
+            display: block;
+            background-color: var(--primary-purple);
+            color: #FFFFFF;
+            text-decoration: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.1s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .link-button:hover, .tool-button:hover {
+            background-color: var(--link-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 彈出工具視窗樣式 (Modal) */
+        .tool-modal {
+            display: none; 
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5); 
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            background-color: var(--tool-bg);
+            padding: 0;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 400px;
+            overflow: hidden;
+            color: var(--text-color);
+            position: relative; 
+            margin: 10% auto; /* 居中 */
+            top: auto; 
+            left: auto;
+        }
+
+        .modal-header {
+            padding: 10px;
+            background-color: var(--tool-header-bg);
+            color: white;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+            text-align: left;
+        }
+
+        .close-btn {
+            color: #fff;
+            font-size: 28px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .close-btn:hover, .close-btn:focus {
+            color: #f0f0f0;
+            text-decoration: none;
+        }
+
+        /* --- 計算機樣式 --- */
+        #calculator {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 10px;
+            background-color: #333; 
+            border-radius: 8px;
+        }
+        
+        #history-display {
+            grid-column: 1 / 5;
+            background-color: #000;
+            color: #aaa; 
+            text-align: right;
+            padding: 5px 15px;
+            font-size: 1em;
+            min-height: 1.2em; 
+        }
+
+        #current-display {
+            grid-column: 1 / 5;
+            background-color: #000;
+            color: #fff;
+            text-align: right;
+            padding: 0 15px 15px 15px;
+            font-size: 2.5em;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            line-height: 1.2;
+        }
+
+        .calc-btn {
+            background-color: var(--calc-btn-bg);
+            color: #000;
+            border: none;
+            padding: 20px 0;
+            border-radius: 50%; 
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.1s;
+            font-weight: bold;
+        }
+
+        .calc-btn.operator, .calc-btn.equal {
+            background-color: var(--primary-purple); 
+            color: white;
+        }
+
+        .calc-btn.zero {
+            grid-column: 1 / 3; 
+            border-radius: 35px; 
+        }
+
+        .calc-btn:hover {
+            opacity: 0.8;
+        }
+
+        /* --- AI 聊天室樣式 --- */
+        #chat-window {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            display: flex;
+            max-width: 85%;
+        }
+
+        .user-message {
+            justify-content: flex-end;
+            margin-left: auto;
+        }
+
+        .ai-message {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.95em;
+            line-height: 1.4;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-message .message-content {
+            background-color: var(--chat-bg-user);
+            color: var(--text-color);
+            border-bottom-right-radius: 0;
+        }
+
+        .ai-message .message-content {
+            background-color: var(--chat-bg-ai);
+            color: #333;
+            border-bottom-left-radius: 0;
+        }
+
+        #chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        #chat-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid var(--primary-purple);
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        #send-button {
+            background-color: var(--primary-purple);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #send-button:hover {
+            background-color: var(--link-hover);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ 歡迎來到 Castorice 的世界！</h1>
+        
+        <img src="https://i.pinimg.com/736x/62/c1/31/62c131d2578f93d698e9eed5c8ea4eda.jpg" 
+             alt="用戶頭像" 
+             class="profile-image">
+             
+        <p>這是一個簡單的連結集合頁面，用來展示我的 GitHub Pages 專案。</p>
+        
+        <hr>
+        <div class="tool-section">
+            <button class="tool-button" onclick="openModal('calculator-modal')">🧮 計算機</button>
+            <button class="tool-button" onclick="openModal('ai-chat-modal')">💬 AI 聊天室</button>
+        </div>
+        <hr>
+
+        <p>點擊下方連結以訪問更多內容：</p>
+        
+        <div class="link-section">
+            <a href="https://www.google.com" target="_blank" class="link-button">
+                🌐 連結一：前往 Google
+            </a>
+            <a href="https://github.com" target="_blank" class="link-button">
+                🐈 連結二：前往 GitHub
+            </a>
+        </div>
+        
+        <hr>
+        <p style="font-size: 0.9em; color: #999;">網頁由 Castorice 設計與維護。</p>
+    </div>
+
+    <div id="calculator-modal" class="tool-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>🧮 紫色計算機</span>
+                <span class="close-btn" onclick="closeModal('calculator-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="history-display"></div> 
+                <div id="current-display">0</div> 
+                <div id="calculator">
+                    <button class="calc-btn" onclick="handleClear()">AC</button>
+                    <button class="calc-btn" onclick="toggleSign()">+/-</button>
+                    <button class="calc-btn operator" data-operator="%" onclick="handleOperator('%')">%</button>
+                    <button class="calc-btn operator" data-operator="/" onclick="handleOperator('/')">÷</button>
+                    
+                    <button class="calc-btn number" onclick="handleNumber('7')">7</button>
+                    <button class="calc-btn number" onclick="handleNumber('8')">8</button>
+                    <button class="calc-btn number" onclick="handleNumber('9')">9</button>
+                    <button class="calc-btn operator" data-operator="*" onclick="handleOperator('*')">×</button>
+
+                    <button class="calc-btn number" onclick="handleNumber('4')">4</button>
+                    <button class="calc-btn number" onclick="handleNumber('5')">5</button>
+                    <button class="calc-btn number" onclick="handleNumber('6')">6</button>
+                    <button class="calc-btn operator" data-operator="-" onclick="handleOperator('-')">−</button>
+
+                    <button class="calc-btn number" onclick="handleNumber('1')">1</button>
+                    <button class="calc-btn number" onclick="handleNumber('2')">2</button>
+                    <button class="calc-btn number" onclick="handleNumber('3')">3</button>
+                    <button class="calc-btn operator" data-operator="+" onclick="handleOperator('+')">+</button>
+
+                    <button class="calc-btn zero" onclick="handleNumber('0')">0</button>
+                    <button class="calc-btn" onclick="handleNumber('.')">.</button>
+                    <button class="calc-btn equal" onclick="handleEqual()">=</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="ai-chat-modal" class="tool-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>💬 Castorice AI 助理</span>
+                <span class="close-btn" onclick="closeModal('ai-chat-modal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="chat-window">
+                    <div class="message ai-message">
+                        <div class="message-content">你好！我是 Castorice 的智能助理。請注意：這個功能需要 Vercel 後端連接到 Google Gemini API 才能正常運作。</div>
+                    </div>
+                </div>
+                <div id="chat-input-container">
+                    <input type="text" id="chat-input" placeholder="輸入訊息..." onkeydown="if(event.key === 'Enter') handleChat();">
+                    <button id="send-button" onclick="handleChat()">發送</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 【第一處修改：設定您的 Vercel API 網址】
+        // **請將 'https://YOUR_VERCEL_APP_URL/api/chat' 替換為您的 Vercel 部署網址**
+        const VERCELL_API_URL = 'https://YOUR_VERCEL_APP_URL/api/chat';
+
+        // --- Modal (彈出視窗) 邏輯 ---
+        function openModal(id) {
+            document.getElementById(id).style.display = 'block';
+            
+            if (id === 'ai-chat-modal') {
+                document.getElementById('chat-input').focus();
+                document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('tool-modal')) {
+                if (event.target.id === 'calculator-modal' || event.target.id === 'ai-chat-modal') {
+                    event.target.style.display = "none";
+                }
+            }
+        }
+        
+        // --- 計算機邏輯 ---
+        let currentNumber = '0'; 
+        let calculation = [];     
+        let waitingForNewNumber = true; 
+        let historyDisplay = document.getElementById('history-display');
+        let currentDisplay = document.getElementById('current-display');
+
+        function updateDisplay() {
+            const formattedHistory = calculation.map(item => {
+                if (item === '*') return '×';
+                if (item === '/') return '÷';
+                return item;
+            }).join(' ');
+            
+            historyDisplay.textContent = formattedHistory;
+            currentDisplay.textContent = currentNumber;
+        }
+
+        function handleNumber(value) {
+            if (value === '.' && currentNumber.includes('.')) return;
+            
+            if (waitingForNewNumber) {
+                currentNumber = value === '.' ? '0.' : value;
+                waitingForNewNumber = false;
+            } else {
+                if (currentNumber === '0' && value !== '.') {
+                    currentNumber = value;
+                } else {
+                    currentNumber += value;
+                }
+            }
+            updateDisplay();
+        }
+
+        function handleOperator(op) {
+            if (calculation.length === 0 && currentNumber === '') return;
+
+            if (typeof calculation[calculation.length - 1] === 'string') {
+                calculation[calculation.length - 1] = op;
+                currentNumber = ''; 
+                waitingForNewNumber = true;
+                updateDisplay();
+                return;
+            }
+
+            if (currentNumber !== '') {
+                calculation.push(currentNumber);
+            }
+            calculation.push(op);
+            
+            currentNumber = '';
+            waitingForNewNumber = true;
+            updateDisplay();
+        }
+
+        function handleEqual() {
+            if (calculation.length === 0 && currentNumber === '0') return;
+
+            if (currentNumber !== '' && typeof calculation[calculation.length - 1] !== 'number') {
+                calculation.push(currentNumber);
+            }
+
+            if (['+', '-', '*', '/', '%'].includes(calculation[calculation.length - 1])) {
+                calculation.pop();
+            }
+
+            const expression = calculation.join('');
+            
+            try {
+                let result = eval(expression);
+
+                currentNumber = String(parseFloat(result.toFixed(10)));
+                historyDisplay.textContent = expression + ' =';
+                calculation = [currentNumber]; 
+                waitingForNewNumber = true;
+
+            } catch (e) {
+                currentNumber = '錯誤';
+                historyDisplay.textContent = '';
+                calculation = [];
+            }
+            updateDisplay();
+        }
+        
+        function handleClear() {
+            currentNumber = '0';
+            calculation = [];
+            waitingForNewNumber = true;
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            if (currentNumber !== '0') {
+                currentNumber = String(parseFloat(currentNumber) * -1);
+            }
+            updateDisplay();
+        }
+        
+        // --- AI 聊天室邏輯 ---
+        const chatInput = document.getElementById('chat-input');
+        const chatWindow = document.getElementById('chat-window');
+
+        function addMessage(sender, text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+
+            const contentDiv = document.createElement('div');
+            contentDiv.classList.add('message-content');
+            contentDiv.textContent = text;
+
+            messageDiv.appendChild(contentDiv);
+            chatWindow.appendChild(messageDiv);
+            
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+            return messageDiv; 
+        }
+        
+        // 【第二處修改：AI 聊天函數】
+        async function handleChat() {
+            const userText = chatInput.value.trim();
+            if (userText === '') return;
+            
+            if (VERCELL_API_URL.includes('YOUR_VERCEL_APP_URL')) {
+                addMessage('ai', '錯誤：請先在程式碼中將 `VERCELL_API_URL` 替換為您實際的 Vercel 網址！');
+                chatInput.value = '';
+                return;
+            }
+
+            addMessage('user', userText);
+            chatInput.value = ''; 
+            chatInput.disabled = true; 
+            document.getElementById('send-button').disabled = true;
+
+            const loadingMsgElement = addMessage('ai', 'AI 正在思考...');
+            
+            try {
+                const response = await fetch(VERCELL_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userText })
+                });
+
+                const data = await response.json();
+                chatWindow.removeChild(loadingMsgElement);
+
+                if (response.ok) {
+                    addMessage('ai', data.response); 
+                } else {
+                    addMessage('ai', `AI 服務錯誤 (${response.status})：` + (data.error || '無法連線或伺服器錯誤。'));
+                }
+
+            } catch (e) {
+                chatWindow.removeChild(loadingMsgElement);
+                addMessage('ai', '網路連線失敗或 Vercel 服務未運行。請檢查您的網址和連線。');
+            } finally {
+                chatInput.disabled = false;
+                document.getElementById('send-button').disabled = false;
+                chatInput.focus();
+            }
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
