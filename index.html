@@ -56,7 +56,6 @@
             margin: 30px 0;
         }
 
-        /* 頭像樣式 */
         .profile-image {
             width: 100px;
             height: 100px;
@@ -68,7 +67,6 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
         }
         
-        /* 連結按鈕區塊 */
         .link-section {
             display: flex;
             flex-direction: column;
@@ -76,7 +74,6 @@
             margin-top: 30px;
         }
         
-        /* 工具按鈕區塊 (左上角) */
         .tool-section {
             display: flex;
             justify-content: flex-start; 
@@ -93,30 +90,27 @@
             padding: 8px 15px; 
             font-size: 1em; 
             flex-grow: 0; 
-        }
-
-        .link-button, .tool-button {
             display: block;
             background-color: var(--primary-purple);
             color: #FFFFFF;
             text-decoration: none;
             border-radius: 25px;
-            font-size: 1.1em;
             font-weight: bold;
             transition: background-color 0.3s, transform 0.1s;
             border: none;
             cursor: pointer;
         }
 
-        .link-button:hover, .tool-button:hover {
+        .tool-button:hover {
             background-color: var(--link-hover);
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-        
-        /* 彈出工具視窗樣式 (Modal) */
-        .tool-modal {
-            display: none; 
+
+        /* ------------------------------------------- */
+        /* === Modal Group 樣式：用於並排顯示 === */
+        .tool-modal-group {
+            display: none; /* 預設隱藏，由 JS 切換為 flex */
             position: fixed;
             z-index: 10;
             left: 0;
@@ -126,21 +120,34 @@
             overflow: auto;
             background-color: rgba(0,0,0,0.5); 
             backdrop-filter: blur(3px);
+            
+            /* 關鍵：並排居中 */
+            display: flex; 
+            justify-content: center; 
+            align-items: center;    
+            gap: 20px; 
+            padding: 20px;
         }
 
+        /* 單個 Modal 樣式 */
+        .tool-modal {
+            position: relative; 
+            display: none; /* 由 JS 控制隱藏或顯示 */
+            flex-direction: column; 
+            max-height: 90vh; 
+            width: 90%;
+            max-width: 400px; 
+        }
+        
         .modal-content {
             background-color: var(--tool-bg);
             padding: 0;
             border-radius: 10px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-            width: 90%;
-            max-width: 400px;
             overflow: hidden;
             color: var(--text-color);
             position: relative; 
-            margin: 10% auto; /* 居中 */
-            top: auto; 
-            left: auto;
+            margin: 0; 
         }
 
         .modal-header {
@@ -316,8 +323,7 @@
         
         <hr>
         <div class="tool-section">
-            <button class="tool-button" onclick="openModal('calculator-modal')">🧮 計算機</button>
-            <button class="tool-button" onclick="openModal('ai-chat-modal')">💬 AI 聊天室</button>
+            <button class="tool-button" onclick="openModalGroup()">🧮 計算機 & 💬 AI 聊天室</button>
         </div>
         <hr>
 
@@ -336,88 +342,94 @@
         <p style="font-size: 0.9em; color: #999;">網頁由 Castorice 設計與維護。</p>
     </div>
 
-    <div id="calculator-modal" class="tool-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span>🧮 紫色計算機</span>
-                <span class="close-btn" onclick="closeModal('calculator-modal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div id="history-display"></div> 
-                <div id="current-display">0</div> 
-                <div id="calculator">
-                    <button class="calc-btn" onclick="handleClear()">AC</button>
-                    <button class="calc-btn" onclick="toggleSign()">+/-</button>
-                    <button class="calc-btn operator" data-operator="%" onclick="handleOperator('%')">%</button>
-                    <button class="calc-btn operator" data-operator="/" onclick="handleOperator('/')">÷</button>
-                    
-                    <button class="calc-btn number" onclick="handleNumber('7')">7</button>
-                    <button class="calc-btn number" onclick="handleNumber('8')">8</button>
-                    <button class="calc-btn number" onclick="handleNumber('9')">9</button>
-                    <button class="calc-btn operator" data-operator="*" onclick="handleOperator('*')">×</button>
-
-                    <button class="calc-btn number" onclick="handleNumber('4')">4</button>
-                    <button class="calc-btn number" onclick="handleNumber('5')">5</button>
-                    <button class="calc-btn number" onclick="handleNumber('6')">6</button>
-                    <button class="calc-btn operator" data-operator="-" onclick="handleOperator('-')">−</button>
-
-                    <button class="calc-btn number" onclick="handleNumber('1')">1</button>
-                    <button class="calc-btn number" onclick="handleNumber('2')">2</button>
-                    <button class="calc-btn number" onclick="handleNumber('3')">3</button>
-                    <button class="calc-btn operator" data-operator="+" onclick="handleOperator('+')">+</button>
-
-                    <button class="calc-btn zero" onclick="handleNumber('0')">0</button>
-                    <button class="calc-btn" onclick="handleNumber('.')">.</button>
-                    <button class="calc-btn equal" onclick="handleEqual()">=</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div id="tool-modal-group" class="tool-modal-group">
     
-    <div id="ai-chat-modal" class="tool-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span>💬 Castorice AI 助理</span>
-                <span class="close-btn" onclick="closeModal('ai-chat-modal')">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div id="chat-window">
-                    <div class="message ai-message">
-                        <div class="message-content">你好！我是 Castorice 的智能助理。請注意：這個功能需要 Vercel 後端連接到 Google Gemini API 才能正常運作。</div>
+        <div id="calculator-modal" class="tool-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span>🧮 紫色計算機</span>
+                    <span class="close-btn" onclick="closeModalGroup()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="history-display"></div> 
+                    <div id="current-display">0</div> 
+                    <div id="calculator">
+                        <button class="calc-btn" onclick="handleClear()">AC</button>
+                        <button class="calc-btn" onclick="toggleSign()">+/-</button>
+                        <button class="calc-btn operator" data-operator="%" onclick="handleOperator('%')">%</button>
+                        <button class="calc-btn operator" data-operator="/" onclick="handleOperator('/')">÷</button>
+                        
+                        <button class="calc-btn number" onclick="handleNumber('7')">7</button>
+                        <button class="calc-btn number" onclick="handleNumber('8')">8</button>
+                        <button class="calc-btn number" onclick="handleNumber('9')">9</button>
+                        <button class="calc-btn operator" data-operator="*" onclick="handleOperator('*')">×</button>
+
+                        <button class="calc-btn number" onclick="handleNumber('4')">4</button>
+                        <button class="calc-btn number" onclick="handleNumber('5')">5</button>
+                        <button class="calc-btn number" onclick="handleNumber('6')">6</button>
+                        <button class="calc-btn operator" data-operator="-" onclick="handleOperator('-')">−</button>
+
+                        <button class="calc-btn number" onclick="handleNumber('1')">1</button>
+                        <button class="calc-btn number" onclick="handleNumber('2')">2</button>
+                        <button class="calc-btn number" onclick="handleNumber('3')">3</button>
+                        <button class="calc-btn operator" data-operator="+" onclick="handleOperator('+')">+</button>
+
+                        <button class="calc-btn zero" onclick="handleNumber('0')">0</button>
+                        <button class="calc-btn" onclick="handleNumber('.')">.</button>
+                        <button class="calc-btn equal" onclick="handleEqual()">=</button>
                     </div>
                 </div>
-                <div id="chat-input-container">
-                    <input type="text" id="chat-input" placeholder="輸入訊息..." onkeydown="if(event.key === 'Enter') handleChat();">
-                    <button id="send-button" onclick="handleChat()">發送</button>
+            </div>
+        </div>
+        
+        <div id="ai-chat-modal" class="tool-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span>💬 Castorice AI 助理</span>
+                    <span class="close-btn" onclick="closeModalGroup()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div id="chat-window">
+                        <div class="message ai-message">
+                            <div class="message-content">你好！我是 Castorice 的智能助理。請告訴我您的問題或開始聊天吧！</div>
+                        </div>
+                    </div>
+                    <div id="chat-input-container">
+                        <input type="text" id="chat-input" placeholder="輸入訊息..." onkeydown="if(event.key === 'Enter') handleChat();">
+                        <button id="send-button" onclick="handleChat()">發送</button>
+                    </div>
                 </div>
             </div>
         </div>
+        
     </div>
     
     <script>
         // 【第一處修改：設定您的 Vercel API 網址】
-        // **請將 'https://YOUR_VERCEL_APP_URL/api/chat' 替換為您的 Vercel 部署網址**
-        const VERCELL_API_URL = 'https://ai-chat-vercel-api-9a8o.vercel.app/';
+        // ⚠️ 請將 'https://YOUR_VERCEL_APP_URL/api/chat' 替換為您的 Vercel 部署網址
+        const VERCELL_API_URL =https://ai-chat-vercel-api-9a8o.vercel.app/;
 
-        // --- Modal (彈出視窗) 邏輯 ---
-        function openModal(id) {
-            document.getElementById(id).style.display = 'block';
-            
-            if (id === 'ai-chat-modal') {
-                document.getElementById('chat-input').focus();
-                document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
-            }
+        // --- Modal 群組邏輯 ---
+        const modalGroup = document.getElementById('tool-modal-group');
+        const calcModal = document.getElementById('calculator-modal');
+        const chatModal = document.getElementById('ai-chat-modal');
+
+        function openModalGroup() {
+            modalGroup.style.display = 'flex'; // 顯示整個 group 容器
+            calcModal.style.display = 'flex';  // 顯示計算機
+            chatModal.style.display = 'flex';  // 顯示聊天室
         }
 
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
+        function closeModalGroup() {
+            modalGroup.style.display = 'none'; // 隱藏整個 group 容器
+            calcModal.style.display = 'none';
+            chatModal.style.display = 'none';
         }
 
         window.onclick = function(event) {
-            if (event.target.classList.contains('tool-modal')) {
-                if (event.target.id === 'calculator-modal' || event.target.id === 'ai-chat-modal') {
-                    event.target.style.display = "none";
-                }
+            // 點擊到遮罩層時關閉整個 group
+            if (event.target.id === 'tool-modal-group') {
+                closeModalGroup();
             }
         }
         
@@ -519,7 +531,7 @@
             updateDisplay();
         }
         
-        // --- AI 聊天室邏輯 ---
+        // --- AI 聊天室邏輯 (連線 Vercel API) ---
         const chatInput = document.getElementById('chat-input');
         const chatWindow = document.getElementById('chat-window');
 
@@ -539,25 +551,28 @@
             return messageDiv; 
         }
         
-        // 【第二處修改：AI 聊天函數】
         async function handleChat() {
             const userText = chatInput.value.trim();
             if (userText === '') return;
             
+            // 檢查網址是否已替換
             if (VERCELL_API_URL.includes('YOUR_VERCEL_APP_URL')) {
                 addMessage('ai', '錯誤：請先在程式碼中將 `VERCELL_API_URL` 替換為您實際的 Vercel 網址！');
                 chatInput.value = '';
                 return;
             }
 
+            // 1. 顯示用戶訊息並鎖定輸入
             addMessage('user', userText);
             chatInput.value = ''; 
             chatInput.disabled = true; 
             document.getElementById('send-button').disabled = true;
 
+            // 顯示思考中訊息
             const loadingMsgElement = addMessage('ai', 'AI 正在思考...');
             
             try {
+                // 2. 向 Vercel API 服務發送請求
                 const response = await fetch(VERCELL_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -565,8 +580,9 @@
                 });
 
                 const data = await response.json();
-                chatWindow.removeChild(loadingMsgElement);
+                chatWindow.removeChild(loadingMsgElement); // 移除思考中的訊息
 
+                // 3. 處理 AI 回覆
                 if (response.ok) {
                     addMessage('ai', data.response); 
                 } else {
@@ -577,6 +593,7 @@
                 chatWindow.removeChild(loadingMsgElement);
                 addMessage('ai', '網路連線失敗或 Vercel 服務未運行。請檢查您的網址和連線。');
             } finally {
+                // 解鎖輸入
                 chatInput.disabled = false;
                 document.getElementById('send-button').disabled = false;
                 chatInput.focus();
@@ -586,5 +603,4 @@
         updateDisplay();
     </script>
 </body>
-
 </html>
