@@ -8,29 +8,22 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "遺失 API 金鑰" });
+  if (!apiKey) return res.status(500).json({ error: "API Key 未設定" });
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // 嘗試使用最基礎的 gemini-1.5-flash 名稱
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // 試試看加上 "models/" 前綴，並使用最新版本號
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
     const { message } = req.body;
-    
-    // 這裡加上一個簡單的超時機制設定
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: message }] }],
-    });
-    
+    const result = await model.generateContent(message);
     const response = await result.response;
-    return res.status(200).json({ response: response.text() });
     
+    return res.status(200).json({ response: response.text() });
   } catch (error) {
-    console.error("Gemini 詳細錯誤:", error);
-    return res.status(500).json({ 
-      error: "Google API 拒絕請求", 
-      details: error.message 
-    });
+    // 如果 1.5-flash-latest 還是 404，這裡會捕捉到
+    console.error("Gemini Error:", error.message);
+    return res.status(500).json({ error: "連線失敗", details: error.message });
   }
 }
