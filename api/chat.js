@@ -8,29 +8,28 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "遺失 API KEY" });
+  if (!apiKey) return res.status(500).json({ error: "Missing API Key" });
 
   try {
+    // 【重點】在這裡強制指定使用 v1 版本，不要用預設的 v1beta
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // 改用更明確的模型路徑名稱
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // 改用明確的模型對接方式
+    const model = genAI.getGenerativeModel(
+      { model: "gemini-1.5-flash" },
+      { apiVersion: "v1" } // 強制切換 API 版本
+    );
 
     const { message } = req.body;
-    
-    // 使用最簡化的請求結構
     const result = await model.generateContent(message);
     const response = await result.response;
-    const text = response.text();
     
-    return res.status(200).json({ response: text });
+    return res.status(200).json({ response: response.text() });
   } catch (error) {
     console.error("DEBUG ERROR:", error.message);
-    // 回傳具體錯誤訊息到前端
     return res.status(500).json({ 
-      error: "Google 拒絕連線", 
-      details: error.message,
-      suggestion: "請確認 Vercel Region 是否為 Singapore"
+      error: "API 連線失敗", 
+      details: error.message 
     });
   }
 }
