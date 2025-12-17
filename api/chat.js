@@ -1,66 +1,52 @@
 export default async function handler(req, res) {
-    // 1. 設定跨域 Header，允許來自 GitHub Pages 的連線
     res.setHeader('Access-Control-Allow-Origin', '*'); 
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    // 2. 處理瀏覽器的預檢請求 (Preflight)
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+    if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // 3. 確保只接受 POST 請求
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: "請使用 POST 方法發送訊息" });
-    }
-
-    // 4. 解析前端傳來的資料，確保 message 存在
     let bodyData;
     try {
         bodyData = (typeof req.body === 'string') ? JSON.parse(req.body) : req.body;
     } catch (e) {
-        return res.status(400).json({ error: "無法解析 JSON 資料格式" });
+        return res.status(400).json({ error: "無法解析 JSON" });
     }
 
-    const userMessage = bodyData?.message;
-    if (!userMessage) {
-        return res.status(400).json({ error: "訊息內容不能為空" });
-    }
-
+    const message = bodyData?.message;
     const apiKey = process.env.GEMINI_API_KEY;
 
+    // 檢查 API KEY 是否讀取成功
+    if (!apiKey) {
+        return res.status(500).json({ error: "Vercel 找不到 GEMINI_API_KEY" });
+    }
+
     try {
-        // 5. 呼叫 Google API：使用最穩定的 gemini-pro 模型
-        // 使用 v1beta 搭配 gemini-pro 是目前相容性最高的組合
-        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+        // 使用目前最穩定的 v1beta + gemini-1.5-flash
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         
-        const googleRes = await fetch(googleUrl, {
+        const googleRes = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: userMessage }] }]
+                contents: [{ parts: [{ text: message }] }]
             })
         });
 
         const data = await googleRes.json();
         
-        // 檢查 Google 是否回報錯誤
         if (data.error) {
+            // 回傳 Google 的詳細錯誤，以便精確判斷
             return res.status(500).json({ 
-                error: "Google API 服務報錯", 
-                details: data.error.message 
+                error: "Google API 報錯", 
+                code: data.error.code,
+                message: data.error.message 
             });
         }
 
-        // 6. 成功取得回覆並傳回前端
-        const aiResponse = data.candidates[0].content.parts[0].text;
-        return res.status(200).json({ response: aiResponse });
+        const aiText = data.candidates[0].content.parts[0].text;
+        return res.status(200).json({ response: aiText });
 
     } catch (error) {
-        // 捕捉網路連線或伺服器內部的意外錯誤
-        return res.status(500).json({ 
-            error: "伺服器連線失敗", 
-            details: error.message 
-        });
+        return res.status(500).json({ error: "連線失敗", details: error.message });
     }
 }
