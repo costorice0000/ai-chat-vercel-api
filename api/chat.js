@@ -13,8 +13,8 @@ export default async function handler(req, res) {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // 使用最穩定的模型標識符
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
     const { message } = req.body;
     
