@@ -409,6 +409,14 @@
         // ⚠️ 請將 'https://YOUR_VERCEL_APP_URL/api/chat' 替換為您的 Vercel 部署網址
        
          const VERCELL_API_URL = 'https://ai-chat-vercel-api-9a8o-yrk4jqred-castorices-projects-32d3cb25.vercel.app/';
+        async function sendMessage(text) {
+    const response = await fetch(VERCELL_API_URL, {
+        method: 'POST', // 必須是 POST
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }) // 欄位名稱必須是 message
+    });
+    return await response.json();
+}
         // --- Modal 群組邏輯 ---
         const modalGroup = document.getElementById('tool-modal-group');
         const calcModal = document.getElementById('calculator-modal');
@@ -604,6 +612,7 @@
     </script>
 </body>
 </html>
+
 
 
 
