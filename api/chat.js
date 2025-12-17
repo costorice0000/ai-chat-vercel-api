@@ -1,34 +1,30 @@
-// api/chat.js
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// 函式會從 Vercel 的環境變數中讀取金鑰，非常安全
-const ai = new GoogleGenAI(process.env.GEMINI_API_KEY); 
+export default async function handler(req, res) {
+  // 1. 設定 CORS (讓 GitHub Pages 可以連過來)
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-// Vercel Function 的入口函式
-export default async (req, res) => {
-    if (req.method !== 'POST') {
-        return res.status(405).send('Method Not Allowed');
-    }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
-    try {
-        const { message } = req.body;
-        
-        if (!message) {
-            return res.status(400).json({ error: "Missing message parameter" });
-        }
+  // 2. 檢查 API Key 是否存在
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: "伺服器遺失 GEMINI_API_KEY" });
+  }
 
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: message,
-        });
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        res.status(200).json({ 
-            response: response.text, 
-            timestamp: new Date().toISOString() 
-        });
-
-    } catch (error) {
-        console.error("Gemini API Error:", error);
-        res.status(500).json({ error: "AI 服務發生錯誤，請檢查伺服器日誌。", details: error.message });
-    }
-};
+    const { message } = req.body;
+    const result = await model.generateContent(message);
+    const response = await result.response;
+    
+    return res.status(200).json({ response: response.text() });
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+    return res.status(500).json({ error: "AI 服務暫時無法運作", details: error.message });
+  }
+}
