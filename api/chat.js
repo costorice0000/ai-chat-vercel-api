@@ -1,35 +1,43 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    // 設置跨域 Header
+    res.setHeader('Access-Control-Allow-Origin', '*'); 
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "Missing API Key" });
+    // 關鍵修正：確保 body 存在，如果不存在就設為空物件
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const { message } = body;
 
-  try {
-    // 【重點】在這裡強制指定使用 v1 版本，不要用預設的 v1beta
-    const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // 改用明確的模型對接方式
-    const model = genAI.getGenerativeModel(
-      { model: "gemini-1.5-flash" },
-      { apiVersion: "v1" } // 強制切換 API 版本
-    );
+    if (!message) {
+        return res.status(400).json({ error: "請提供 message 內容" });
+    }
 
-    const { message } = req.body;
-    const result = await model.generateContent(message);
-    const response = await result.response;
-    
-    return res.status(200).json({ response: response.text() });
-  } catch (error) {
-    console.error("DEBUG ERROR:", error.message);
-    return res.status(500).json({ 
-      error: "API 連線失敗", 
-      details: error.message 
-    });
-  }
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    try {
+        const googleRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: message }] }]
+                })
+            }
+        );
+
+        const data = await googleRes.json();
+        
+        if (data.error) {
+            return res.status(500).json({ error: data.error.message });
+        }
+
+        const aiText = data.candidates[0].content.parts[0].text;
+        return res.status(200).json({ response: aiText });
+
+    } catch (error) {
+        return res.status(500).json({ error: "Google API 連線失敗", details: error.message });
+    }
 }
