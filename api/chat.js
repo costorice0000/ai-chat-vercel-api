@@ -8,29 +8,33 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: "伺服器遺失 API 金鑰" });
+  
+  // 診斷：如果沒抓到 Key，直接回報
+  if (!apiKey) {
+    return res.status(500).json({ error: "Vercel 沒抓到 GEMINI_API_KEY，請檢查 Environment Variables" });
+  }
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    // 強制指定模型，避免 SDK 自動判定出錯
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+    });
 
     const { message } = req.body;
     
-    // 確保訊息格式完全符合 Google 要求
+    // 使用最基礎的格式發送
     const result = await model.generateContent(message);
     const response = await result.response;
-    const text = response.text();
     
-    return res.status(200).json({ response: text });
+    return res.status(200).json({ response: response.text() });
   } catch (error) {
-    console.error("Gemini Error:", error);
-    // 這裡是關鍵：將詳細錯誤傳回前端
+    console.error("詳細錯誤內容:", error);
     return res.status(500).json({ 
-      error: "AI 服務呼叫失敗", 
-      details: error.message,
-      type: error.constructor.name 
+      error: "Google 伺服器回傳錯誤", 
+      message: error.message,
+      stack: error.stack // 這能幫我們看到是哪一行出錯
     });
   }
 }
