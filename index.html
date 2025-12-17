@@ -395,8 +395,7 @@
                         </div>
                     </div>
                     <div id="chat-input-container">
-                        <input type="text" id="chat-input" placeholder="輸入訊息..." onkeydown="if(event.key === 'Enter') handleChat();">
-                        <button id="send-button" onclick="handleChat()">發送</button>
+                        
                     </div>
                 </div>
             </div>
@@ -559,17 +558,57 @@
             return messageDiv; 
         }
         
-        async function handleChat() {
-            const userText = chatInput.value.trim();
-            if (userText === '') return;
-            
-            // 檢查網址是否已替換
-            if (VERCELL_API_URL.includes('YOUR_VERCEL_APP_URL')) {
-                addMessage('ai', '錯誤：請先在程式碼中將 `VERCELL_API_URL` 替換為您實際的 Vercel 網址！');
-                chatInput.value = '';
-                return;
-            }
+    async function handleChat() {
+    const chatInput = document.getElementById('chat-input');
+    const chatWindow = document.getElementById('chat-window'); // 確保有抓到對話視窗
+    const userText = chatInput.value.trim();
+    
+    // 這是剛才 image_add46b.png 裡的判斷邏輯
+    if (userText === '') return;
 
+    // 1. 顯示使用者訊息
+    addMessage('user', userText);
+    chatInput.value = '';
+
+    // 2. 顯示思考中動畫或文字
+    const loadingMsg = addMessage('ai', '思考中...');
+
+    try {
+        // 3. 直接連向 Google Gemini API
+        // ⚠️ 請記得在下方 API_KEY 變數填入你的金鑰
+        const API_KEY = "AIzaSyBkyJTVPdwfyLOV2N3SigNUVo375T4t2qc"; 
+        
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: userText }] }]
+            })
+        });
+
+        const data = await response.json();
+        
+        // 移除「思考中...」
+        if (loadingMsg && loadingMsg.parentNode) {
+            chatWindow.removeChild(loadingMsg);
+        }
+
+        // 4. 處理回傳結果
+        if (data.candidates && data.candidates[0].content) {
+            const aiResponse = data.candidates[0].content.parts[0].text;
+            addMessage('ai', aiResponse);
+        } else if (data.error) {
+            // 處理 image_ae4541.png 提到的 API key 無效問題
+            addMessage('ai', "系統提示：" + data.error.message);
+        }
+    } catch (e) {
+        if (loadingMsg && loadingMsg.parentNode) {
+            chatWindow.removeChild(loadingMsg);
+        }
+        addMessage('ai', "連線失敗，請檢查網路狀況。");
+        console.error(e);
+    }
+}
             // 1. 顯示用戶訊息並鎖定輸入
             addMessage('user', userText);
             chatInput.value = ''; 
@@ -612,6 +651,7 @@
     </script>
 </body>
 </html>
+
 
 
 
