@@ -106,54 +106,69 @@
         </div>
     </div>
 
-    <script>
-        // --- 基礎彈窗邏輯 ---
-        function openTools() { document.getElementById('tool-modal-group').style.display = 'flex'; }
-        function closeTools() { document.getElementById('tool-modal-group').style.display = 'none'; }
+   <script>
+    // --- 基礎彈窗邏輯 ---
+    function openTools() { document.getElementById('tool-modal-group').style.display = 'flex'; }
+    function closeTools() { document.getElementById('tool-modal-group').style.display = 'none'; }
 
-        // --- 計算機邏輯 ---
-        let display = document.getElementById('calc-display');
-        function pressNum(n) { if(display.innerText === '0') display.innerText = n; else display.innerText += n; }
-        function pressOp(op) { display.innerText += op; }
-        function clearCalc() { display.innerText = '0'; }
-        function calculate() { try { display.innerText = eval(display.innerText); } catch { display.innerText = 'Error'; } }
+    // --- 計算機邏輯 ---
+    let display = document.getElementById('calc-display');
+    function pressNum(n) { if(display.innerText === '0') display.innerText = n; else display.innerText += n; }
+    function pressOp(op) { display.innerText += op; }
+    function clearCalc() { display.innerText = '0'; }
+    function calculate() { try { display.innerText = eval(display.innerText); } catch { display.innerText = 'Error'; } }
 
-        // --- AI 聊天邏輯 (對接 Vercel) ---
-        const chatWindow = document.getElementById('chat-window');
-        const chatInput = document.getElementById('chat-input');
+    // --- AI 聊天邏輯 (直接連線 Google，不透過 Vercel) ---
+    const chatWindow = document.getElementById('chat-window');
+    const chatInput = document.getElementById('chat-input');
 
-        function addMsg(sender, text) {
-            const div = document.createElement('div');
-            div.className = `message ${sender}-msg`;
-            div.innerHTML = `<div class="message-content">${text}</div>`;
-            chatWindow.appendChild(div);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-            return div;
-        }
+    // 🔑 在這裡填入你的 API KEY
+    const MY_GEMINI_KEY = "AIzaSyBkyJTVPdwfyLOV2N3SigNUVo375T4t2qc"; 
 
-        async function handleChat() {
-            const text = chatInput.value.trim();
-            if (!text) return;
+    function addMsg(sender, text) {
+        const div = document.createElement('div');
+        div.className = `message ${sender}-msg`;
+        div.innerHTML = `<div class="message-content">${text}</div>`;
+        chatWindow.appendChild(div);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+        return div;
+    }
 
-            addMsg('user', text);
-            chatInput.value = '';
-            const loading = addMsg('ai', '思考中...');
+    async function handleChat() {
+        const text = chatInput.value.trim();
+        if (!text) return;
 
-            try {
-                // 注意：這裡使用相對路徑 /api/chat，Vercel 部署後會自動找 api 資料夾
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
-                });
-                const data = await response.json();
-                chatWindow.removeChild(loading);
-                addMsg('ai', data.response || "抱歉，我暫時無法回應。");
-            } catch (e) {
-                if(loading) chatWindow.removeChild(loading);
-                addMsg('ai', "連線失敗，請檢查 Vercel API 是否運行。");
+        addMsg('user', text);
+        chatInput.value = '';
+        const loading = addMsg('ai', '思考中...');
+
+        try {
+            // 直接呼叫 Google API 網址
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${MY_GEMINI_KEY}`;
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: text }] }]
+                })
+            });
+
+            const data = await response.json();
+            chatWindow.removeChild(loading);
+
+            if (data.error) {
+                addMsg('ai', "錯誤：" + data.error.message);
+            } else {
+                const aiText = data.candidates[0].content.parts[0].text;
+                addMsg('ai', aiText);
             }
+        } catch (e) {
+            if(loading) chatWindow.removeChild(loading);
+            addMsg('ai', "連線失敗，請檢查網路或 API Key。");
         }
-    </script>
+    }
+</script>
 </body>
 </html>
+
