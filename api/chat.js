@@ -1,10 +1,12 @@
 export default async function handler(req, res) {
+    // 1. 設置跨域 Header
     res.setHeader('Access-Control-Allow-Origin', '*'); 
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
+    // 2. 解析前端傳來的訊息
     let bodyData;
     try {
         bodyData = (typeof req.body === 'string') ? JSON.parse(req.body) : req.body;
@@ -15,14 +17,13 @@ export default async function handler(req, res) {
     const message = bodyData?.message;
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // 檢查 API KEY 是否讀取成功
     if (!apiKey) {
-        return res.status(500).json({ error: "Vercel 找不到 GEMINI_API_KEY" });
+        return res.status(500).json({ error: "Vercel 找不到 API Key" });
     }
 
     try {
-        // 使用目前最穩定的 v1beta + gemini-1.5-flash
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // 3. 【核心修正】換成絕對存在的 gemini-pro 模型
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
         
         const googleRes = await fetch(url, {
             method: 'POST',
@@ -35,14 +36,13 @@ export default async function handler(req, res) {
         const data = await googleRes.json();
         
         if (data.error) {
-            // 回傳 Google 的詳細錯誤，以便精確判斷
             return res.status(500).json({ 
-                error: "Google API 報錯", 
-                code: data.error.code,
+                error: "Google 服務報錯", 
                 message: data.error.message 
             });
         }
 
+        // 4. 成功取得 AI 回覆
         const aiText = data.candidates[0].content.parts[0].text;
         return res.status(200).json({ response: aiText });
 
