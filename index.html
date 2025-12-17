@@ -118,42 +118,4 @@
         function clearCalc() { display.innerText = '0'; }
         function calculate() { try { display.innerText = eval(display.innerText); } catch { display.innerText = 'Error'; } }
 
-        // --- AI 聊天邏輯 (對接 Vercel) ---
-        const chatWindow = document.getElementById('chat-window');
-        const chatInput = document.getElementById('chat-input');
-
-        function addMsg(sender, text) {
-            const div = document.createElement('div');
-            div.className = `message ${sender}-msg`;
-            div.innerHTML = `<div class="message-content">${text}</div>`;
-            chatWindow.appendChild(div);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-            return div;
-        }
-
-        async function handleChat() {
-            const text = chatInput.value.trim();
-            if (!text) return;
-
-            addMsg('user', text);
-            chatInput.value = '';
-            const loading = addMsg('ai', '思考中...');
-
-            try {
-                // 注意：這裡使用相對路徑 /api/chat，Vercel 部署後會自動找 api 資料夾
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
-                });
-                const data = await response.json();
-                chatWindow.removeChild(loading);
-                addMsg('ai', data.response || "抱歉，我暫時無法回應。");
-            } catch (e) {
-                if(loading) chatWindow.removeChild(loading);
-                addMsg('ai', "連線失敗，請檢查 Vercel API 是否運行。");
-            }
-        }
-    </script>
-</body>
-</html>
+    
