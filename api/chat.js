@@ -1,60 +1,48 @@
-// api/chat.js
-// 使用 Vercel Edge Runtime 以獲得最快的響應速度
-export const config = {
-  runtime: 'edge',
-};
+export const config = { runtime: 'edge' };
+
+// 輔助函式：延遲執行
+const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
 export default async function handler(req) {
-  // 1. 只允許 POST 請求
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
 
-  try {
-    // 2. 從 Vercel 環境變數讀取 API Key
-    const API_KEY = process.env.GEMINI_API_KEY;
+  const API_KEY = process.env.GEMINI_API_KEY;
+  const { model, contents } = await req.json();
 
-    if (!API_KEY) {
-      return new Response(JSON.stringify({ error: '後端未設定 API_KEY' }), {
-        status: 500,
+  // 1. 使用穩定版 v1 接口，減少 v1beta 的不穩定配額限制
+  const url = `https://generativelanguage.googleapis.com/v1/models/${model || 'gemini-1.5-flash'}:generateContent?key=${API_KEY}`;
+
+  let attempts = 0;
+  const maxAttempts = 3; // 最多重試 3 次
+
+  while (attempts < maxAttempts) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents })
       });
+
+      // 2. 如果遇到 429
+      if (response.status === 429) {
+        attempts++;
+        console.warn(`遇到 429 錯誤，正在進行第 ${attempts} 次重試...`);
+        // 每次失敗就多等 2 秒再試 (指數退避)
+        await delay(2000 * attempts);
+        continue; 
+      }
+
+      const data = await response.json();
+      return new Response(JSON.stringify(data), {
+        status: response.status,
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+    } catch (error) {
+      if (attempts >= maxAttempts - 1) {
+        return new Response(JSON.stringify({ error: "重試次數過多，Google API 暫時鎖定" }), { status: 429 });
+      }
+      attempts++;
     }
-
-    // 3. 解析前端傳來的資料
-    const { model, contents } = await req.json();
-
-    // 4. 設定 Google Gemini API 的請求地址
-    // 使用 v1beta 版本以支援最新的 2.0 模型
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-3.0-flash'}:generateContent?key=${API_KEY}`;
-
-    // 5. 發送請求到 Google
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ contents }),
-    });
-
-    const data = await response.json();
-
-    // 6. 將 Google 的回傳結果轉發給前端
-    return new Response(JSON.stringify(data), {
-      status: response.status,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // 允許跨網域存取
-      },
-    });
-
-  } catch (error) {
-    return new Response(JSON.stringify({ error: '後端發生錯誤: ' + error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
   }
 }
