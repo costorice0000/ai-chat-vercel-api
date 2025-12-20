@@ -29,7 +29,7 @@ export default async function handler(req) {
 
     // 4. 設定 Google Gemini API 的請求地址
     // 使用 v1beta 版本以支援最新的 2.0 模型
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-2.0-flash'}:generateContent?key=${API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model || 'gemini-3.0-flash'}:generateContent?key=${API_KEY}`;
 
     // 5. 發送請求到 Google
     const response = await fetch(url, {
