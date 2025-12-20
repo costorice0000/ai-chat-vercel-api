@@ -25,8 +25,8 @@ export default async function handler(req) {
 
     // 2. 支援 2.0 的通道：使用 v1beta
     // 預設模型設為 2.0 Flash 實驗版
-    const targetModel = model || 'gemini-2.0-flash';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${API_KEY}`;
+    const targetModel = model || 'gemini-2.0-flash-exp';
+    const url = `https://generativelanguage.googleapis.com/v2beta/models/${targetModel}:generateContent?key=${API_KEY}`;
 
     let response;
     let attempts = 0;
